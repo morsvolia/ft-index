@@ -407,8 +407,10 @@ toku_os_get_processor_frequency(uint64_t *hzret) {
         r = toku_get_processor_frequency_sys(hzret);
         if (r != 0)
             r = toku_get_processor_frequency_cpuinfo(hzret);
+#ifndef __FreeBSD__        
         if (r != 0)
             r = toku_get_processor_frequency_sysctl("sysctl -n hw.cpufrequency", hzret);
+#endif
         if (r != 0)
             r = toku_get_processor_frequency_sysctl("sysctl -n machdep.tsc_freq", hzret);
         if (r == 0)

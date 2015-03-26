@@ -39,3 +39,4 @@ third_party/jemalloc
 # Common cmake build directories
 build
 dbg
+install

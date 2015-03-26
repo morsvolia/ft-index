@@ -278,7 +278,7 @@ env_fs_poller(void *arg) {
     int in_red;    // set true to prevent certain operations (returning ENOSPC)
 
     // get the fs sizes for the home dir
-    uint64_t avail_size, total_size;
+    uint64_t avail_size=0, total_size=0;
     r = toku_get_filesystem_sizes(env->i->dir, &avail_size, NULL, &total_size);
     assert(r == 0);
     in_yellow = (avail_size < 2 * env_fs_redzone(env, total_size));

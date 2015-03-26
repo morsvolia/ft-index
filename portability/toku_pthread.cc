@@ -96,7 +96,7 @@ int toku_pthread_yield(void) {
 #if defined(HAVE_PTHREAD_YIELD)
 # if defined(PTHREAD_YIELD_RETURNS_INT)
     return pthread_yield();
-# elif defined(PTHREAD_YIELD_RETURNS_VOID)
+# elif defined(PTHREAD_YIELD_RETURNS_VOID) || defined(__FreeBSD__)
     pthread_yield();
     return 0;
 # else

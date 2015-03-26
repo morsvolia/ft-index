@@ -2981,6 +2981,7 @@ ft_handle_open(FT_HANDLE ft_h, const char *fname_in_env, int is_create, int only
     bool was_already_open;
     {
         int fd = -1;
+        was_already_open = false;
         r = ft_open_file(fname_in_cwd, &fd);
         if (reserved_filenum.fileid == FILENUM_NONE.fileid) {
             reserved_filenum = toku_cachetable_reserve_filenum(cachetable);

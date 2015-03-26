@@ -89,6 +89,8 @@ PATENT RIGHTS GRANT:
 #include <algorithm>
 
 #include <string.h>
+#include <stdlib.h>
+#include <limits.h>
 
 #include "portability/toku_assert.h"
 

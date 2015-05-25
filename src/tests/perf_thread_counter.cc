@@ -1,6 +1,5 @@
 /* -*- mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*- */
 // vim: ft=cpp:expandtab:ts=8:sw=4:softtabstop=4:
-
 /*
 COPYING CONDITIONS NOTICE:
 
@@ -86,72 +85,46 @@ PATENT RIGHTS GRANT:
   under this License.
 */
 
-#pragma once
-
 #ident "Copyright (c) 2007-2013 Tokutek Inc.  All rights reserved."
-#ident "The technology is licensed by the Massachusetts Institute of Technology, Rutgers State University of New Jersey, and the Research Foundation of State University of New York at Stony Brook under United States of America Serial No. 11/760379 and to the patents and/or patent applications resulting from it."
+#ident "$Id$"
+#include "test.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <string.h>
+#include <toku_pthread.h>
+#include <unistd.h>
+#include <memory.h>
+#include <sys/stat.h>
+#include <db.h>
 
-namespace toku {
+#include "threaded_stress_test_helpers.h"
 
-    class scoped_malloc {
-    public:
-        // Memory is allocated from thread-local storage if available, otherwise from malloc(3).
-        scoped_malloc(const size_t size);
+// Measure the throughput of incrementing a status variable on multiple threads.
 
-        ~scoped_malloc();
+volatile __thread uint64_t the_counter = 0;
 
-        void *get() const {
-            return m_buf;
-        }
+static int UU() nop(DB_TXN* UU(txn), ARG UU(arg), void* UU(operation_extra), void *UU(stats_extra)) {
+    the_counter++; // toku_sync_fetch_and_add(&the_counter, 1);
+    return 0;
+}
 
-    private:
-        // Non-copyable
-        scoped_malloc();
+static void
+stress_table(DB_ENV* env, DB** dbp, struct cli_args *cli_args) {
+    if (verbose) printf("starting creation of pthreads\n");
+    const int num_threads = cli_args->num_ptquery_threads;
+    struct arg myargs[num_threads];
+    for (int i = 0; i < num_threads; i++) {
+        arg_init(&myargs[i], dbp, env, cli_args);
+        myargs[i].operation = nop;
+    }
+    run_workers(myargs, num_threads, cli_args->num_seconds, false, cli_args);
+}
 
-        const size_t m_size;
-        const bool m_local;
-        void *const m_buf;
-    };
-
-    class scoped_calloc : public scoped_malloc {
-    public:
-        // A scoped malloc whose bytes are initialized to zero, as in calloc(3)
-        scoped_calloc(const size_t size) :
-            scoped_malloc(size) {
-            memset(scoped_malloc::get(), 0, size);
-        }
-    };
-
-    class scoped_malloc_aligned : public scoped_malloc {
-    public:
-        scoped_malloc_aligned(const size_t size, const size_t alignment) :
-            scoped_malloc(size + alignment) {
-            invariant(size >= alignment);
-            invariant(alignment > 0);
-            const uintptr_t addr = reinterpret_cast<uintptr_t>(scoped_malloc::get());
-            const uintptr_t aligned_addr = (addr + alignment) - (addr % alignment);
-            invariant(aligned_addr < addr + size + alignment);
-            m_aligned_buf = reinterpret_cast<char *>(aligned_addr);
-        }
-
-        void *get() const {
-            return m_aligned_buf;
-        }
-
-    private:
-        void *m_aligned_buf;
-    };
-
-} // namespace toku
-
-void toku_scoped_malloc_init(void);
-
-void toku_scoped_malloc_destroy(void);
-
-void toku_scoped_malloc_destroy_set(void);
-
-void toku_scoped_malloc_destroy_key(void);
-
+int
+test_main(int argc, char *const argv[]) {
+    struct cli_args args = get_default_args_for_perf();
+    parse_stress_test_args(argc, argv, &args);
+    perf_test_main(&args);
+    return 0;
+}

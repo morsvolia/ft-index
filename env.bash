@@ -25,7 +25,10 @@ cmake \
     -DUSE_ETAGS=OFF \
     -DUSE_GTAGS=OFF \
     -DUSE_CSCOPE=OFF \
-    -DCMAKE_INSTALL_PREFIXC=$PWD/install \
+    -DCMAKE_INSTALL_PREFIX=$PWD/install \
     ..
 
 gmake install
+
+echo "remember to copy build/install/include/ftcxx & *.h to /usr/local/include"
+echo "remember to copy *.a at build/install/lib to /usr/local/lib"
